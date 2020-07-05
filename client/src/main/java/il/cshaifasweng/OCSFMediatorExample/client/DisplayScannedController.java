@@ -136,14 +136,18 @@ public class DisplayScannedController {
 		Rad4.setSelected(false);
 		Rad4.setText("");
 		questionNum-=1;
-		quesnum.setText(questionNum + 1 + " / " + numofques);
-		
-		if (questionNum == 0) {
+//		if (questionNum >0) {
+//			questionNum-=1;
+//		}
+		if(questionNum==0) {
 			backbtn.setVisible(false);
 		}
+		quesnum.setText(questionNum + 1 + " / " + numofques);
 		if (questionNum == questions.size() - 2) {
 			nextbtn.setVisible(true);
-			backbtn.setVisible(true);
+			if(questions.size()>2) {
+				backbtn.setVisible(true);
+			}
 		}
 
 		FillTheQuestions(questionNum);

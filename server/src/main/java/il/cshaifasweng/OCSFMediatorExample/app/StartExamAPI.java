@@ -19,7 +19,6 @@ import il.cshaifasweng.OCSFMediatorExample.server.ocsf.ConnectionToClient;
 
 public class StartExamAPI {
 
-
 	public static void ReturnExam(Command command, ConnectionToClient client) {
 		String[] arr = new String[4];
 		arr = (String[]) command.getCommand();
@@ -35,30 +34,49 @@ public class StartExamAPI {
 			myConnection = DriverManager.getConnection(url, name, pass);
 			Statement stmt = (Statement) myConnection.createStatement();
 			String sql = "SELECT * FROM exam WHERE code = '" + Code + "'";
-			
+
 			ResultSet rs = stmt.executeQuery(sql);
 			rs.next();
 			int exam_id = rs.getInt("id");
 			Boolean onexec = rs.getBoolean("Onexecute");
 			int duration = rs.getInt("duration");
-			if(!onexec) {
+			if (!onexec) {
 				sql = "UPDATE exam SET Onexecute = 1 WHERE id = '" + exam_id + "'";
 				stmt.executeUpdate(sql);
 				Thread thread = new Thread() {
 					public void run() {
 						try {
 							sleep(duration * 60000);
+							String sql0 = "SELECT * FROM exam WHERE code = '" + Code + "'";
+							ResultSet rs;
+							try {
+								rs = stmt.executeQuery(sql0);
+								rs.next();
+								int approved = rs.getInt("timeRequest");
+								if (approved == 2) {
+									int extra = (int) rs.getDouble("howMuchTimeToADD");
+									sleep(extra * 60000);
+								}
+							} catch (SQLException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
+
 							String sql1 = "UPDATE exam SET Onexecute = 0 WHERE id = '" + exam_id + "'";
-							String sql2 = "UPDATE exam SET code = -1 WHERE id = '" + exam_id + "'";//yes3ed rabak
+							String sql2 = "UPDATE exam SET code = -1 WHERE id = '" + exam_id + "'";// yes3ed rabak
+							String sql3 = "UPDATE exam SET timeRequest = 0 WHERE id = '" + exam_id + "'";
+							String sql4 = "UPDATE exam SET howMuchTimeToADD = 0 WHERE id = '" + exam_id + "'";
 							try {
 								stmt.executeUpdate(sql1);
-								
+
 								stmt.executeUpdate(sql2);
+								stmt.executeUpdate(sql3);
+								stmt.executeUpdate(sql4);
 							} catch (SQLException e) {
 								// TODO Auto-generated catch block
 								e.printStackTrace();
 							}
-							
+
 						} catch (InterruptedException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
@@ -66,7 +84,7 @@ public class StartExamAPI {
 					}
 				};
 				thread.start();
-				
+
 			}
 
 			System.out.println("examidddddd = " + exam_id);
@@ -118,8 +136,6 @@ public class StartExamAPI {
 
 		}
 
-		
-
 		try {
 			client.sendToClient(command);
 		} catch (IOException e) {
@@ -128,9 +144,9 @@ public class StartExamAPI {
 		}
 
 	}
-	
+
 	public static void checkifextra(Command command, ConnectionToClient client) throws SQLException {
-		
+		System.out.println("checkifextra function ");
 		String name, pass, url;
 		url = "jdbc:mysql://127.0.0.1/hstsdatabase";
 		name = "root";
@@ -138,18 +154,28 @@ public class StartExamAPI {
 		Connection myConnection;
 		myConnection = DriverManager.getConnection(url, name, pass);
 		Statement stmt = (Statement) myConnection.createStatement();
-		int exam_id= (int) command.getCommand();
-		System.out.println("8744444444444444");
-		String sql="SELECT * FROM exam WHERE id = '" + exam_id + "' AND timeRequest = 2";
+		int exam_id = (int) command.getCommand();
+		;
+		String sql = "SELECT * FROM exam WHERE id = '" + exam_id + "' AND timeRequest = 2";
 		ResultSet rs = stmt.executeQuery(sql);
-		int extra;
-		if(rs.next()) {
-			 extra = (int) rs.getDouble("howMuchTimeToADD");
-		}else {
-			extra=0;
+		double extra=0;
+		int extratime = 0;
+		if (rs.next()) {
+			System.out.println(" true extra ");
+
+			extra = rs.getDouble("howMuchTimeToADD");
+			extratime = (int) extra;
+		} else {
+			System.out.println(" false extra ");
+
+			extra = 0;
+			extratime = 0;
 		}
-		
-		command.setCommand(extra);
+		System.out.println(" EXITING checkifextra function ");
+		System.out.println(
+				extratime + " = aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+
+		command.setCommand(extratime);
 
 		try {
 			client.sendToClient(command);

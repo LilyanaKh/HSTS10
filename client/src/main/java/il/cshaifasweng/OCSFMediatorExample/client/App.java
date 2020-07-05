@@ -28,13 +28,12 @@ import il.cshaifasweng.OCSFMediatorExample.entities.solvedExam;
  */
 public class App extends Application { //// remember update question
 
-	//// REMEMBER CLOSE STAGE
-
 	private static App app;
 	private static Scene scene;
 	private SimpleClient client;
 	private static Stage stage;
 	private static String UserInfo;
+	private static String view;
 	private String UserId;
 	private String whatiam;// TeatcherORManger
 	static Exam exam = new Exam();
@@ -86,15 +85,16 @@ public class App extends Application { //// remember update question
 
 	public void LoginIn(String[] arr) throws IOException {
 		UserInfo = arr[0];
+		view = arr[2];
 		whatiam = arr[2];
 		SimpleClient.getClient().handleLoginIn(arr);
 
 	}
 
 	public void LogOut() throws IOException {
-		String[] arr = new String[1];
-		System.out.println("username =" + UserInfo);
+		String[] arr = new String[2];
 		arr[0] = UserInfo;
+		arr[1] = view;
 		SimpleClient.getClient().handleLogOut(arr);
 
 	}
@@ -132,9 +132,11 @@ public class App extends Application { //// remember update question
 		} else if (arr[2].equalsIgnoreCase("false")) {
 			addingTextToCodeOrId("loginexam.fxml", "Wrong Code.");
 		}
-//		else if (arr[2].equalsIgnoreCase("submitted")) {
-//			addingTextToCodeOrId("loginexam.fxml", "This exam already submitted.");/////////zedha
-//		}
+
+		else if (arr[2].equalsIgnoreCase("submitted")) {
+			addingTextToCodeOrId("loginexam.fxml", "This exam already submitted.");///////// zedha
+		}
+
 		if (arr[0].equalsIgnoreCase("true") && arr[2].equalsIgnoreCase("true")) {
 			if (!(arr[1].equalsIgnoreCase(this.UserId))) {
 				addingTextToCodeOrId("loginexam.fxml", "Incompetable ID.");
@@ -181,12 +183,15 @@ public class App extends Application { //// remember update question
 			((LoginExamController) controller).getWrongId().setText("This exam already submitted.");
 			break;
 		case ("false"):
-			((PrimaryController) controller).getUserNameText().setText("Invalid input!");
+			((PrimaryController) controller).getUserNameText().setText("Incorrect user info or interface");
 			break;
 		case ("isconnected"):
-			((PrimaryController) controller).getUserNameText().setText("Your account is already cnnected!");
+			((PrimaryController) controller).getUserNameText().setText("The account is already connected!");
 			break;
 
+		case ("nointerfacechoosen"):
+			((PrimaryController) controller).getUserNameText().setText("No interface is chosen!");
+			break;
 		}
 
 		scene = new Scene(mainAnchor, 600, 400);
@@ -198,11 +203,25 @@ public class App extends Application { //// remember update question
 		SimpleClient.getClient().handlecheckSubject(UserInfo);
 	}
 
-	public void showTeacherView() throws IOException {
-		scene = new Scene(loadFXML("teacher"), 600, 400);
-		stage.setScene(scene);
-		stage.setTitle("Teacher Actions");
-		stage.show();
+	public void showTeacherView(String[] msg) throws IOException {
+		if (msg != null) {
+			this.UserId = msg[2];
+			if (msg[0].equalsIgnoreCase("false")) {
+				addingTextToCodeOrId("primary.fxml", "false");
+			} else if (msg[0].equalsIgnoreCase("isconnected")) {
+				addingTextToCodeOrId("primary.fxml", "isconnected");
+			} else {
+				scene = new Scene(loadFXML("teacher"), 600, 400);
+				stage.setScene(scene);
+				stage.show();
+			}
+
+		} else {
+			scene = new Scene(loadFXML("teacher"), 600, 400);
+			stage.setScene(scene);
+			stage.setTitle("Teacher Actions");
+			stage.show();
+		}
 	}
 
 	public void showStudentView(String[] msg) throws IOException {
@@ -214,16 +233,32 @@ public class App extends Application { //// remember update question
 		} else {
 			scene = new Scene(loadFXML("student"), 600, 400);
 			stage.setScene(scene);
+			stage.setTitle("Student Actions");
 			stage.show();
 		}
 
 	}
 
-	public void showManagerView() throws IOException {
-		scene = new Scene(loadFXML("manager"), 600, 400);
-		stage.setScene(scene);
-		stage.setTitle("Manager Actions");
-		stage.show();
+	public void showManagerView(String[] msg) throws IOException {
+
+		if (msg != null) {
+			this.UserId = msg[2];
+			if (msg[0].equalsIgnoreCase("false")) {
+				addingTextToCodeOrId("primary.fxml", "false");
+			} else if (msg[0].equalsIgnoreCase("isconnected")) {
+				addingTextToCodeOrId("primary.fxml", "isconnected");
+			} else {
+				scene = new Scene(loadFXML("manager"), 600, 400);
+				stage.setScene(scene);
+				stage.show();
+			}
+
+		} else {
+			scene = new Scene(loadFXML("manager"), 600, 400);
+			stage.setScene(scene);
+			stage.setTitle("Manager Actions");
+			stage.show();
+		}
 	}
 
 	public void showExecutelogView() throws IOException {
@@ -240,8 +275,9 @@ public class App extends Application { //// remember update question
 	}
 
 	public void getSolvedExams(int gradesorscanned) throws IOException {
-		SimpleClient.getClient().handleGetSolved(UserId,gradesorscanned);
+		SimpleClient.getClient().handleGetSolved(UserId, gradesorscanned);
 	}
+
 	public void showScannedExam(List<solvedExam> list) throws IOException {
 		new ShowScannedController(list);
 		scene = new Scene(loadFXML("showscanned"), 600, 400);
@@ -271,34 +307,30 @@ public class App extends Application { //// remember update question
 	public void StartExamAnswer(Exam exam) throws IOException {///////////////// sending exam to the controller to show
 																///////////////// it
 
-		if(exam.getExamExecutaion()==true) {
-			System.out.println("bbbbbbbbbbb");
-
+		if (exam.getExamExecutaion() == true) {
 			ExamExecutingController examexecutingcontroller = new ExamExecutingController(exam);
-			scene = new Scene(loadFXML("examexecutintg"), 600, 400);//mmo7shav
+			scene = new Scene(loadFXML("examexecutintg"), 600, 400);// mmo7shav
 			stage.setScene(scene);
 			stage.show();
-		}else {
-//			
-		  
-		new Thread() {
-			public void run() {
-				
-					 try {
-						 WordGenerator  w = new WordGenerator();
+		} else {
+
+			new Thread() {
+				public void run() {
+
+					try {
+						WordGenerator w = new WordGenerator();
 						w.createWord(exam);
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
-				
-			}
-		}.start();
-		new ManualExamController(exam);
-		scene = new Scene(loadFXML("manualexam"), 600, 400);// ydne
-		stage.setScene(scene);
-		stage.show();
-		
+
+				}
+			}.start();
+			new ManualExamController(exam);
+			scene = new Scene(loadFXML("manualexam"), 600, 400);// ydne
+			stage.setScene(scene);
+			stage.show();
 
 		}
 
@@ -319,6 +351,7 @@ public class App extends Application { //// remember update question
 	 * 
 	 * }
 	 */
+
 	public void checkCourses(int stage) throws IOException {
 
 		SimpleClient.getClient().handlecheckCourses(stage, UserInfo);
@@ -448,11 +481,11 @@ public class App extends Application { //// remember update question
 		switch (whatiam) {
 		case ("Teacher"):
 
-			showTeacherView();
+			showTeacherView(null);
 			break;
 
 		case ("Manager"):
-			showManagerView();
+			showManagerView(null);
 			break;
 
 		}
@@ -497,7 +530,7 @@ public class App extends Application { //// remember update question
 
 	public void savingtheuploadedexam(Exam exam, File file) throws IOException {
 		// TODO Auto-generated method stub
-		SimpleClient.getClient().handlesavingtheuploadedexam(exam,file,UserId);
+		SimpleClient.getClient().handlesavingtheuploadedexam(exam, file, UserId);
 	}
 
 	public void DisplaySelectedExams(solvedExam solved) throws IOException {
@@ -505,7 +538,7 @@ public class App extends Application { //// remember update question
 		scene = new Scene(loadFXML("displaysacannedexam"), 600, 400);
 		stage.setScene(scene);
 		stage.show();
-		
+
 	}
 
 	public void bringsspecificsolvedexam(int chosenintger) throws IOException {
@@ -513,9 +546,7 @@ public class App extends Application { //// remember update question
 
 	}
 
-
-	public void showSolvedExamQuestionView() throws IOException {	
-		
+	public void showSolvedExamQuestionView() throws IOException {
 
 		scene = new Scene(loadFXML("showingsolvedexamquestion"), 600, 400);
 		stage.setScene(scene);
@@ -523,17 +554,14 @@ public class App extends Application { //// remember update question
 		stage.show();
 	}
 
-
 	public void confirmsolvedexam(String[] solvedInfo) throws IOException {
 		SimpleClient.getClient().handleconfirmsolvedexam(solvedInfo);
 	}
-
 
 	public void AllExamstoShowResultsManager() throws IOException {
 		SimpleClient.getClient().handleallExamstoShowResultsManager();
 
 	}
-
 
 	public void bringExamOnExecute() throws IOException {
 
@@ -541,54 +569,46 @@ public class App extends Application { //// remember update question
 		SimpleClient.getClient().handleBringExamOnExecute(UserInfo);
 	}
 
-
 	public void displayExamOnExecuteView() throws IOException {
 		scene = new Scene(loadFXML("displayexamonexecutaion"), 600, 400);
 		stage.setScene(scene);
 		stage.setTitle("Showing Exam On Executation");
 		stage.show();
-		
-	}
 
+	}
 
 	public void addTimeforExamTeacher(String[] examonExecuteinfo) throws IOException {
 
 		examonExecuteinfo[2] = UserInfo;
 		SimpleClient.getClient().handleAddTimeforExamTeacher(examonExecuteinfo);
 
-		
 	}
-
 
 	public Boolean checkingAddtimeRequest() throws IOException {
 		return SimpleClient.getClient().handlecheckingAddtimeRequest();
-		
-	}
 
+	}
 
 	public void bringTimeRequestExam() throws IOException {
 		SimpleClient.getClient().handlebringTimeRequestExam();
-		
-	}
 
+	}
 
 	public void confirmingtheaddingTimeByManager(String chosen) throws IOException {
 		SimpleClient.getClient().handleconfirmingtheaddingTimeByManager(chosen);
-		
-	}
 
+	}
 
 	public void showAllAddingTimeRequestExams() throws IOException {
 		scene = new Scene(loadFXML("alltimeaddingrequestmanager"), 600, 400);
 		stage.setScene(scene);
 		stage.setTitle("Adding Time Requests");
-		stage.show();		
+		stage.show();
 	}
 
 	public int ifextra(int exam_id) throws IOException {
 		return SimpleClient.getClient().handleifextra(exam_id);
-		
-	}
 
+	}
 
 }
